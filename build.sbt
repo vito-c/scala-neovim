@@ -1,0 +1,11 @@
+fork in run := true
+cancelable in Global := true
+name := "scala-client"
+version := "0.1"
+scalaVersion := "2.11.7"
+libraryDependencies += "com.github.xuwei-k" %% "msgpack4z-core" % "0.2.0"
+libraryDependencies += "com.github.xuwei-k" % "msgpack4z-java07" % "0.2.0"
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
+libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.12"
+libraryDependencies +=  "com.chrisneveu" %% "macrame" % "1.0.1"
+mainClass in (Compile,run) := Some("Example")
