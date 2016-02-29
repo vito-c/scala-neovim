@@ -20,7 +20,7 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
 
   def apiInfo(implicit ec: ExecutionContext): Future[String] = {
     connection.sendRequest("vim_get_api_info") {
-      case u ⇒ NvimHelper.msgpackUnionAsString(u, nest = 0)
+      case u => NvimHelper.msgpackUnionAsString(u, nest = 0)
     }
   }
 
@@ -55,8 +55,8 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
    */
   def buffers(implicit ec: ExecutionContext): Future[Seq[Buffer]] = {
     connection.sendRequest("vim_get_buffers") {
-      case MsgpackArray(xs) ⇒ xs map NvimHelper.parse {
-        case MsgpackExt(BufferId, Array(bufId)) ⇒
+      case MsgpackArray(xs) => xs map NvimHelper.parse {
+        case MsgpackExt(BufferId, Array(bufId)) =>
           Buffer(bufId.toInt, connection)
       }
     }
@@ -67,7 +67,7 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
    */
   def buffer(implicit ec: ExecutionContext): Future[Buffer] = {
     connection.sendRequest("vim_get_current_buffer") {
-      case MsgpackExt(BufferId, Array(bufId)) ⇒
+      case MsgpackExt(BufferId, Array(bufId)) =>
         Buffer(bufId.toInt, connection)
     }
   }
@@ -78,7 +78,7 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
    */
   def buffer_=(bufferId: Int)(implicit ec: ExecutionContext): Future[Buffer] = {
     connection.sendRequest("vim_set_current_buffer") {
-      case _ ⇒ Buffer(bufferId, connection)
+      case _ => Buffer(bufferId, connection)
     }
   }
 
@@ -87,8 +87,8 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
    */
   def windows(implicit ec: ExecutionContext): Future[Seq[Window]] = {
     connection.sendRequest("vim_get_windows") {
-      case MsgpackArray(xs) ⇒ xs map NvimHelper.parse {
-        case MsgpackExt(WindowId, Array(winId)) ⇒
+      case MsgpackArray(xs) => xs map NvimHelper.parse {
+        case MsgpackExt(WindowId, Array(winId)) =>
           Window(winId.toInt, connection)
       }
     }
@@ -99,7 +99,7 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
    */
   def window(implicit ec: ExecutionContext): Future[Window] = {
     connection.sendRequest("vim_get_current_window") {
-      case MsgpackExt(WindowId, Array(winId)) ⇒
+      case MsgpackExt(WindowId, Array(winId)) =>
         Window(winId.toInt, connection)
     }
   }
@@ -110,7 +110,7 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
    */
   def window_=(winId: Int)(implicit ec: ExecutionContext): Future[Window] = {
     connection.sendRequest("vim_set_current_window", int(winId)) {
-      case _ ⇒ Window(winId, connection)
+      case _ => Window(winId, connection)
     }
   }
 
@@ -123,7 +123,7 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
    */
   def eval(expr: String)(implicit ec: ExecutionContext): Future[MsgpackUnion] = {
     connection.sendRequest("vim_eval", string(expr)) {
-      case m ⇒ m
+      case m => m
     }
   }
 
@@ -135,7 +135,7 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
    */
   def subscribe(event: String)(implicit ec: ExecutionContext): Future[Unit] = {
     connection.sendRequest("vim_subscribe", string(event)) {
-      case _ ⇒ ()
+      case _ => ()
     }
   }
 
@@ -147,13 +147,13 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
    */
   def unsubscribe(event: String)(implicit ec: ExecutionContext): Future[Unit] = {
     connection.sendRequest("vim_unsubscribe", string(event)) {
-      case _ ⇒ ()
+      case _ => ()
     }
   }
 }
 
 // trait NoNvimProtocolFunctionality {
-//   this: Nvim ⇒
+//   this: Nvim =>
 //
 //   import Mode._
 //
@@ -165,26 +165,26 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
 //     val `CTRL-S` = 19
 //     val `CTRL-V` = 22
 //     eval("""mode("1")""") map NvimHelper.parse {
-//       case MsgpackString(mode) ⇒ mode match {
-//         case "n"                   ⇒ Normal
-//         case "no"                  ⇒ OperatorPending
-//         case "v"                   ⇒ VisualByCharacter
-//         case "V"                   ⇒ VisualByLine
-//         case s if s(0) == `CTRL-V` ⇒ VisualBlockwise
-//         case "s"                   ⇒ SelectByCharacter
-//         case "S"                   ⇒ SelectByLine
-//         case s if s(0) == `CTRL-S` ⇒ SelectBlockwise
-//         case "i"                   ⇒ Insert
-//         case "R"                   ⇒ Replace
-//         case "Rv"                  ⇒ VirtualReplace
-//         case "c"                   ⇒ CommandLine
-//         case "cv"                  ⇒ VimExMode
-//         case "ce"                  ⇒ NormalExMode
-//         case "r"                   ⇒ HitEnterPrompt
-//         case "rm"                  ⇒ MorePrompt
-//         case "r?"                  ⇒ ConfirmQuery
-//         case "!"                   ⇒ ExternalCommandRunning
-//         case s                     ⇒ throw new UnexpectedResponse(s"Vim mode `$s` is unknown.")
+//       case MsgpackString(mode) => mode match {
+//         case "n"                   => Normal
+//         case "no"                  => OperatorPending
+//         case "v"                   => VisualByCharacter
+//         case "V"                   => VisualByLine
+//         case s if s(0) == `CTRL-V` => VisualBlockwise
+//         case "s"                   => SelectByCharacter
+//         case "S"                   => SelectByLine
+//         case s if s(0) == `CTRL-S` => SelectBlockwise
+//         case "i"                   => Insert
+//         case "R"                   => Replace
+//         case "Rv"                  => VirtualReplace
+//         case "c"                   => CommandLine
+//         case "cv"                  => VimExMode
+//         case "ce"                  => NormalExMode
+//         case "r"                   => HitEnterPrompt
+//         case "rm"                  => MorePrompt
+//         case "r?"                  => ConfirmQuery
+//         case "!"                   => ExternalCommandRunning
+//         case s                     => throw new UnexpectedResponse(s"Vim mode `$s` is unknown.")
 //       }
 //     }
 //   }
@@ -195,9 +195,9 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
 //   def selection(implicit ec: ExecutionContext): Future[Selection] = {
 //     def asPos(u: MsgpackUnion) = u match {
 //       // TODO handle `bufnum` and `off`
-//       case MsgpackArray(List(MsgpackLong(bufnum), MsgpackLong(row), MsgpackLong(col), MsgpackLong(off))) ⇒
+//       case MsgpackArray(List(MsgpackLong(bufnum), MsgpackLong(row), MsgpackLong(col), MsgpackLong(off))) =>
 //         Position(row.toInt, col.toInt)
-//       case s ⇒
+//       case s =>
 //         throw new UnexpectedResponse(s"Unknown selection result `${NvimHelper.msgpackUnionAsString(s, 0)}`.")
 //     }
 //
@@ -224,9 +224,9 @@ final case class Nvim(connection: Connection) { //extends NoNvimProtocolFunction
 //     } yield Selection(asPos(selStart), asPos(selEnd))
 //
 //     activeMode flatMap {
-//       case VisualByCharacter | VisualBlockwise ⇒ currentSel
-//       case VisualByLine                        ⇒ visualLineSel
-//       case _                                   ⇒ cursorPos
+//       case VisualByCharacter | VisualBlockwise => currentSel
+//       case VisualByLine                        => visualLineSel
+//       case _                                   => cursorPos
 //     }
 //   }
 //

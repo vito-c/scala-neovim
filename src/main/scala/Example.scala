@@ -2,7 +2,7 @@ import msgpack4z._
 import msgpack4z.CodecInstances.all._
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessageUnpacker
-import nvim.protocol._
+//import nvim.protocol._
 import scala.collection.concurrent.TrieMap
 
 import scala.collection.mutable
