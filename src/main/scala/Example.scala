@@ -15,11 +15,13 @@ import nvim._
 object Example {
 
   def main(args : Array[String]) { 
+    println("hello")
     val host = "127.0.0.1"
     val port = 8000
 
     val nv = Nvim( new Connection( host, port) )
     nv.sendVimCommand("vsplit")
+    println("goodbye")
 
   }
 
