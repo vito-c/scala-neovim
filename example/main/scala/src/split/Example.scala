@@ -1,8 +1,8 @@
+package split
 import msgpack4z._
 import msgpack4z.CodecInstances.all._
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessageUnpacker
-//import nvim.protocol._
 import scala.collection.concurrent.TrieMap
 
 import scala.collection.mutable
@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import nvim._
 
 object Example {
-
   def main(args : Array[String]) { 
     println("hello")
     val host = "127.0.0.1"
@@ -22,9 +21,7 @@ object Example {
     val nv = Nvim( new Connection( host, port) )
     nv.sendVimCommand("vsplit")
     println("goodbye")
-
   }
-
 }
  
 
