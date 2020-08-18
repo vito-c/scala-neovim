@@ -1,4 +1,4 @@
-package nvim.protocol
+package nvim.v1.protocol
 
 import com.rallyhealth.weepack.v1._
 import com.rallyhealth.weepickle.v1._

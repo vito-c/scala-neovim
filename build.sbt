@@ -35,9 +35,6 @@ lazy val server = project.in(file("server"))
       "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
       "org.scalatest" %% "scalatest" % "3.1.0" % Test,
       "ch.qos.logback" % "logback-classic" % "1.2.3"
-// "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-// "org.slf4j" % "slf4j-log4j12" % "1.7.12",
-//  "com.chrisneveu" %% "macrame" % "1.2.3",
     )
   )
   /* .dependsOn(service % "compile;test->test") */

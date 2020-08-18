@@ -1,4 +1,4 @@
-package nvim
+package nvim.v1
 
 import java.net.Socket
 import java.util.concurrent.ConcurrentSkipListSet

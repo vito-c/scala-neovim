@@ -1,4 +1,4 @@
-package nvim
+package nvim.v1
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future

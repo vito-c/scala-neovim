@@ -1,4 +1,4 @@
-package nvim.protocol
+package nvim.v1.protocol
 
 import msgpack4z._
 import msgpack4z.CodecInstances.all._
