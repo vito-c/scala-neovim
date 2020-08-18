@@ -40,7 +40,7 @@ class Nvim(remote: InetSocketAddress, listener: ActorRef) extends Actor with Act
           // listener ! "write failed"
         case Received(data) =>
           log.info("data ack")
-          // listener ! data
+          listener ! data
         case "close" =>
           connection ! Close
         case _: ConnectionClosed =>
