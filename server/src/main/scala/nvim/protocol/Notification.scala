@@ -1,18 +1,23 @@
 package nvim.protocol
 
+import com.rallyhealth.weepack.v1._
+import com.rallyhealth.weepickle.v1._
 import msgpack4z._
 import msgpack4z.CodecInstances.all._
+import com.rallyhealth.weepickle.v1.WeePickle.{FromTo, _}
+import com.rallyhealth.weepickle.v1.implicits._
+import com.rallyhealth.weepack.v1.ToMsgPack
 
-final case class Notification(tpe: Int, method: String, params: MsgpackUnion) {
-  override def toString = {
-    val sb = new StringBuilder
-    sb.append("Notification(\n")
-    sb.append("  type: ").append(tpe).append(",\n")
-    sb.append("  method: ").append(method).append(",\n")
-    sb.append("  params: ").append(NvimHelper.msgpackUnionAsString(params, nest = 1)).append("\n")
-    sb.append(")")
-    sb.toString
-  }
+case class Notification(tpe: Int, method: String, params: MsgpackUnion) {
+  // override def toString = {
+  //   val sb = new StringBuilder
+  //   sb.append("Notification(\n")
+  //   sb.append("  type: ").append(tpe).append(",\n")
+  //   sb.append("  method: ").append(method).append(",\n")
+  //   sb.append("  params: ").append(NvimHelper.msgpackUnionAsString(params, nest = 1)).append("\n")
+  //   sb.append(")")
+  //   sb.toString
+  // }
 }
 
 object Notification {

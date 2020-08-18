@@ -19,5 +19,3 @@ final case class Response(tpe: Int, id: Int, error: MsgpackUnion, result: Msgpac
 object Response {
   implicit val instance: MsgpackCodec[Response] = CaseCodec.codec(Response.apply _, Response.unapply _)
 }
-
-

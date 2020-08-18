@@ -5,7 +5,7 @@ import scala.concurrent.Future
 
 import msgpack4z._
 import msgpack4z.MsgpackUnion._
-import macrame.enum
+// import macrame.enum
 import nvim.protocol._
 
 object Nvim {

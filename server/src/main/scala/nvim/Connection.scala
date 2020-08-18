@@ -12,13 +12,16 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+import com.rallyhealth.weepack.v1._
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessageUnpacker
 
-import com.typesafe.scalalogging.LazyLogging
+// import com.typesafe.scalalogging.LazyLogging
 
 import msgpack4z._
 import nvim.protocol._
+import com.rallyhealth.weepickle.v1.WeePickle.ToScala
+import org.slf4j.LoggerFactory
 
 /**
  * Manages the connection to Neovim. Communication is done through the
@@ -26,7 +29,8 @@ import nvim.protocol._
  *
  * [[https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md]]
  */
-final class Connection(host: String, port: Int) extends LazyLogging {
+final class Connection(host: String, port: Int) {
+  val logger = LoggerFactory.getLogger(getClass)
 
   val ResponseId = 1
   val NotificationId = 2
@@ -41,11 +45,14 @@ final class Connection(host: String, port: Int) extends LazyLogging {
   private val socket = new Socket(host, port)
   private val thread = new Thread(new Runnable {
     override def run() = {
+
+      // val munp = new InputStreamMsgPackParser(socket.getInputStream,128,256)
+      
       val unp = MessagePack.DEFAULT.newUnpacker(socket.getInputStream)
       val unpacker = new Msgpack07Unpacker(unp)
       readResp(unp, unpacker)
 
-      logger.warn(s"Connection to $host:$port lost")
+      logger.info(s"Connection to $host:$port lost")
     }
   })
   thread.start()
@@ -125,7 +132,9 @@ final class Connection(host: String, port: Int) extends LazyLogging {
     val req = Notification(2, method, ps)
 
     val bytes = MsgpackCodec[Notification].toBytes(req, new Msgpack07Packer)
+    val strs = (bytes.map(_.toChar)).mkString 
     logger.debug(s"sending: $req")
+    logger.debug(s"raw: $strs")
     val out = socket.getOutputStream
     out.write(bytes)
     out.flush()
