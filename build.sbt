@@ -4,18 +4,6 @@ organization := "vito-c.github.com"
 name := "scala-neovim"
 version := "0.2.0"
 scalaVersion := "2.13.3"
-/* libraryDependencies ++= Seq("actor") map { "com.typesafe.akka" %% "akka-%s".format(_) % "2.4.1" } //"2.3.12" } */
-/* libraryDependencies ++= Seq("testkit") map { "com.typesafe.akka" %% "akka-%s".format(_) % "2.4.1" % "test" } //"2.3.12" % "test" } */
-
-// libraryDependencies += "com.github.xuwei-k" %% "msgpack4z-core" % "0.3.8"
-// libraryDependencies += "com.github.xuwei-k" % "msgpack4z-java07" % "0.2.0"
-// libraryDependencies += "com.typesafe" % "config" % "1.3.0"
-// libraryDependencies ++= Seq("actor") map { "com.typesafe.akka" %% "akka-%s".format(_) % "2.4.20" } //"2.3.12" }
-// libraryDependencies ++= Seq("testkit") map { "com.typesafe.akka" %% "akka-%s".format(_) % "2.4.20" % "test" } //"2.3.12" % "test" }
-// libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
-// libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.12"
-// libraryDependencies +=  "com.chrisneveu" %% "macrame" % "1.2.3"
-
 
 lazy val akkaVersion = "2.6.8"
 
@@ -34,17 +22,9 @@ lazy val server = project.in(file("server"))
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
       "org.scalatest" %% "scalatest" % "3.1.0" % Test,
-      "ch.qos.logback" % "logback-classic" % "1.2.3"
-    )
+      "com.lihaoyi" %% "utest" % "0.7.2" % "test",
+      "ch.qos.logback" % "logback-classic" % "1.2.3",
+      "com.lihaoyi" %% "pprint" % "0.5.6"
+    ),
+    testFrameworks += new TestFramework("utest.runner.Framework")
   )
-  /* .dependsOn(service % "compile;test->test") */
-  /* .dependsOn(model % "compile;test->test") */
-// mainClass in (Compile,run) := Some("Server")
-// libraryDependencies += "com.github.xuwei-k" %% "msgpack4z-core" % "0.3.8",
-// libraryDependencies += "com.github.xuwei-k" % "msgpack4z-java07" % "0.2.0",
-// libraryDependencies += "com.typesafe" % "config" % "1.3.0",
-// libraryDependencies ++= Seq("actor") map { "com.typesafe.akka" %% "akka-%s".format(_) % "2.4.20" }, //"2.3.12" },
-// libraryDependencies ++= Seq("testkit") map { "com.typesafe.akka" %% "akka-%s".format(_) % "2.4.20" % "test" }, //"2.3.12" % "test" }
-// libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-// libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.12",
-// libraryDependencies +=  "com.chrisneveu" %% "macrame" % "1.2.3",

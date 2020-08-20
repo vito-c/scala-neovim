@@ -6,7 +6,7 @@ import scala.concurrent.Future
 import msgpack4z._
 import msgpack4z.MsgpackUnion._
 // import macrame.enum
-import nvim.protocol._
+import nvim.v1.protocol._
 
 object Nvim {
   val BufferId = 0

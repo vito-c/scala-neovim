@@ -19,9 +19,10 @@ import org.msgpack.core.MessageUnpacker
 // import com.typesafe.scalalogging.LazyLogging
 
 import msgpack4z._
-import nvim.protocol._
+import nvim.v1.protocol._
 import com.rallyhealth.weepickle.v1.WeePickle.ToScala
 import org.slf4j.LoggerFactory
+import com.rallyhealth.weejson.v1.jackson.ToJson
 
 /**
  * Manages the connection to Neovim. Communication is done through the
@@ -132,9 +133,10 @@ final class Connection(host: String, port: Int) {
     val req = Notification(2, method, ps)
 
     val bytes = MsgpackCodec[Notification].toBytes(req, new Msgpack07Packer)
-    val strs = (bytes.map(_.toChar)).mkString 
+
+    val json = FromMsgPack(bytes).transform(ToJson.string)
     logger.debug(s"sending: $req")
-    logger.debug(s"raw: $strs")
+    println(json)
     val out = socket.getOutputStream
     out.write(bytes)
     out.flush()

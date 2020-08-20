@@ -5,8 +5,8 @@ import scala.concurrent.Future
 
 import msgpack4z._
 import msgpack4z.MsgpackUnion._
-import nvim.protocol.NvimHelper
-import nvim.protocol.UnexpectedResponse
+import nvim.v1.protocol.NvimHelper
+import nvim.v1.protocol.UnexpectedResponse
 
 /**
  * Low level wrapper around Nvims msgpack-rpc protocol. Represents a Nvim
