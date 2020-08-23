@@ -31,7 +31,6 @@ object Server extends App {
   val neovim = system.actorOf(Props(new Nvim(new InetSocketAddress(host, port))), name = "neovim")
 
 
-
   // val nv = Nvim(new Connection(host, port))
   // nv.sendVimCommand("vsplit")
 }

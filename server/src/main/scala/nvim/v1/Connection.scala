@@ -60,7 +60,7 @@ final class Connection(host: String, port: Int) {
 
   private def readResp(unp: MessageUnpacker, unpacker: Msgpack07Unpacker): Unit = {
     /*
-     * The stupid API doesn't allow to do a look ahead, therefore we have to
+     * The API doesn't allow to do a look ahead, therefore we have to
      * use reflection to correct the internal position in the buffer.
      */
     def lookAheadType(): Int = {

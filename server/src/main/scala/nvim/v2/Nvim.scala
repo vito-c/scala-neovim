@@ -11,7 +11,21 @@ import com.rallyhealth.weepack.v1._
 import com.rallyhealth.weejson.v1.jackson.ToJson
 import com.rallyhealth.weepack.v1.FromMsgPack
 import com.rallyhealth.weepickle.v1.WeePickle.FromScala
+import com.rallyhealth.weejson.v1.jackson.FromJson
+import nvim.v2.msgpack.ToMsgPackRPC
 
+// {
+//   "parameters": [
+//     [
+//       "String",
+//       "command"
+//     ]
+//   ],
+//   "method": false,
+//   "return_type": "void",
+//   "name": "nvim_command",
+//   "since": 1
+// },
 object Nvim {
   def props(remote: InetSocketAddress, replies: ActorRef) =
     Props(classOf[Nvim], remote, replies)
@@ -20,13 +34,28 @@ object Nvim {
 // https://github.com/msgpack-rpc/msgpack-rpc
 // https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md
 
+trait Notifable {
+  def notification: Notification
+}
+
+case class Command(command: String) extends Notifable {
+  def notification: Notification =
+    Notification(0, "nvim_command", List(Str(command)))
+}
+
 case class ConnectionFailed()
-case class Request(tpe: Int, id:Int, method: String, params: List[Msg])
+case class Request(tpe: Int, id: Int, method: String, params: List[Msg])
 object Request {
   implicit val fmt = macroFromTo[Request]
 }
-case class Response(tpe: Int, id:Int, error: Msg, result: Msg)
+case class Response(tpe: Int, id: Int, error: Msg, result: Msg)
+object Response {
+  implicit val fmt = macroFromTo[Response]
+}
 case class Notification(tpe: Int, method: String, params: List[Msg])
+object Notification {
+  implicit val fmt = macroFromTo[Notification]
+}
 
 class Nvim(remote: InetSocketAddress) extends Actor with ActorLogging { //, listener: ActorRef) extends Actor with ActorLogging {
 
@@ -47,9 +76,11 @@ class Nvim(remote: InetSocketAddress) extends Actor with ActorLogging { //, list
       val connection = sender()
       connection ! Register(self)
       context.become {
-        // case notification: Notification =>
-        //   pprint.log(notification)
-          // val data = FromScala(notification).transform(ToMsgPack.bytes)
+        case n:Notifable =>
+          self ! n.notification
+        case notification: Notification =>
+          //   pprint.log(notification)
+          val data = FromScala(notification).transform(ToMsgPackRPC.bytes)
           //
           // val json = FromMsgPack(data.clone).transform(ToJson.string)
           // val scl = List(2,"vim_command", List("vsplit"))
@@ -58,10 +89,14 @@ class Nvim(remote: InetSocketAddress) extends Actor with ActorLogging { //, list
           // [2,"vim_command",["vsplit"]]
           // println(jsn)
           // println(json)
-          // self ! ByteString(data)
+          self ! ByteString(data)
 
         case data: ByteString =>
           log.info("write data")
+          val res = FromMsgPack(data.toArray).transform(ToJson.string)
+          println("===============================")
+          println(res)
+          println("===============================")
           connection ! Write(data)
         case CommandFailed(w: Write) =>
           // O/S buffer was full
@@ -69,6 +104,8 @@ class Nvim(remote: InetSocketAddress) extends Actor with ActorLogging { //, list
         // listener ! "write failed"
         case Received(data) =>
           log.info("data ack")
+          val res = FromMsgPack(data.toArray).transform(ToJson.string)
+          pprint.log(res)
         // listener ! data
         case "close" =>
           connection ! Close
@@ -77,6 +114,6 @@ class Nvim(remote: InetSocketAddress) extends Actor with ActorLogging { //, list
           log.info("connection closed")
           context.stop(self)
       }
-      // self ! Notification(0, "nvim_command", FromScala(List("vsplit")).transform(ToMsgPack.b))
+      self ! Command("vsplit")
   }
 }

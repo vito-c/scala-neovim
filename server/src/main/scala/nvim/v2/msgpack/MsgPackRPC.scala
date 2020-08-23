@@ -1,4 +1,4 @@
-package nvm.msgpack
+package nvim.v2.msgpack
 
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
@@ -10,10 +10,53 @@ import com.rallyhealth.weepack.v1.{MsgPackKeys => MPK}
 import com.rallyhealth.weepickle.v1.core.{ArrVisitor, ObjVisitor, Visitor}
 import com.rallyhealth.weepack.v1.MsgVisitor
 import com.rallyhealth.weepack.v1.MsgPackRenderer
+import com.rallyhealth.weepickle.v1.core.NoOpVisitor
 
 class MsgPackRPC[T <: java.io.OutputStream](
     out: T = new ByteArrayOutputStream()
-) extends MsgVisitor[T, T] {
+) extends MsgPackRenderer[T](out) {
+  override def visitObject(length: Int): ObjVisitor[T, T] =
+    new ObjVisitor[T, T] {
+      require(
+        length != -1,
+        "Length of com.rallyhealth.weepack.v1 object must be known up front"
+      )
+      if (length <= 15) {
+        out.write(MPK.FixArrMask | length)
+      } else if (length <= 65535) {
+        out.write(MPK.Map16)
+        writeUInt16(length)
+      } else {
+        out.write(MPK.Map32)
+        writeUInt32(length)
+      }
+
+      def subVisitor: Visitor[_, _] = {
+        MsgPackRPC.this
+      }
+
+      def visitKey(): Visitor[_, _] = {
+        NoOpVisitor
+      }
+      def visitKeyValue(s: Any): Unit = () // do nothing
+      def visitValue(v: T): Unit = () // do nothing
+
+      def visitEnd(): T = out // do nothing
+    }
+}
+
+class MsgPackRPC2[T <: java.io.OutputStream](
+    barr: T = new ByteArrayOutputStream()
+) extends MsgVisitor[T, T]
+    with NullPack[T]
+    with NumericPack[T]
+    with StringPack[T]
+    with ExtPack[T]
+    with CharPack[T]
+    with TimestampPack[T] {
+
+  override def out = barr
+
   override def visitArray(length: Int): ArrVisitor[T, T] =
     new ArrVisitor[T, T] {
       require(
@@ -29,7 +72,7 @@ class MsgPackRPC[T <: java.io.OutputStream](
         out.write(MPK.Array32)
         writeUInt32(length)
       }
-      def subVisitor = MsgPackRPC.this
+      def subVisitor = MsgPackRPC2.this
       def visitValue(v: T): Unit = () // do nothing
       def visitEnd(): T = out // do nothing
     }
@@ -41,7 +84,7 @@ class MsgPackRPC[T <: java.io.OutputStream](
         "Length of com.rallyhealth.weepack.v1 object must be known up front"
       )
       if (length <= 15) {
-        out.write(MPK.FixMapMask | length)
+        out.write(MPK.FixArrMask | length)
       } else if (length <= 65535) {
         out.write(MPK.Map16)
         writeUInt16(length)
@@ -49,50 +92,79 @@ class MsgPackRPC[T <: java.io.OutputStream](
         out.write(MPK.Map32)
         writeUInt32(length)
       }
-      def subVisitor = MsgPackRPC.this
+
+      def subVisitor: Visitor[_, _] = {
+        pprint.log("visit sub")
+        MsgPackRPC2.this
+      }
+
       def visitKey(): Visitor[_, _] = {
         pprint.log("visit key")
-        MsgPackRPC.this
+        // MsgPackRPC.this
+        NoOpVisitor
       }
       def visitKeyValue(s: Any): Unit = () // do nothing
       def visitValue(v: T): Unit = () // do nothing
+
       def visitEnd(): T = out // do nothing
     }
+}
 
-  override def visitNull(): T = {
+trait NullPack[T <: java.io.OutputStream] extends PackWriters[T] {
+  def visitNull(): T = {
     out.write(MPK.Nil)
     out
   }
+}
 
-  override def visitFalse(): T = {
+trait NumericPack[T <: java.io.OutputStream] extends PackWriters[T] {
+  def visitBinary(bytes: Array[Byte], offset: Int, len: Int): T = {
+    if (len <= 255) {
+      out.write(MPK.Bin8)
+      writeUInt8(len)
+    } else if (len <= 65535) {
+      out.write(MPK.Bin16)
+      writeUInt16(len)
+    } else {
+      out.write(MPK.Bin32)
+      writeUInt32(len)
+    }
+
+    out.write(bytes, offset, len)
+    out
+  }
+
+  def visitFalse(): T = {
     out.write(MPK.False)
     out
   }
 
-  override def visitTrue(): T = {
+  def visitTrue(): T = {
     out.write(MPK.True)
     out
   }
 
-  override def visitFloat64StringParts(
-      cs: CharSequence,
-      decIndex: Int,
-      expIndex: Int
-  ): T = {
-    visitFloat64(cs.toString.toDouble)
-  }
+  // def visitFloat64String(s: String): T = this.visitFloat64(s.toDouble)
+  // def visitFloat64StringParts(
+  //     cs: CharSequence,
+  //     decIndex: Int,
+  //     expIndex: Int
+  // ): T = {
+  //   pprint.log("visit string parts")
+  //   visitFloat64(cs.toString.toDouble)
+  // }
 
-  override def visitFloat64(d: Double): T = {
+  def visitFloat64(d: Double): T = {
     out.write(MPK.Float64)
     writeUInt64(java.lang.Double.doubleToLongBits(d))
     out
   }
-  override def visitFloat32(d: Float): T = {
+  def visitFloat32(d: Float): T = {
     out.write(MPK.Float32)
     writeUInt32(java.lang.Float.floatToIntBits(d))
     out
   }
-  override def visitInt32(i: Int): T = {
+  def visitInt32(i: Int): T = {
     if (i >= 0) {
       if (i <= 127) out.write(i)
       else if (i <= 255) {
@@ -125,7 +197,7 @@ class MsgPackRPC[T <: java.io.OutputStream](
     out
   }
 
-  override def visitInt64(l: Long): T = {
+  def visitInt64(l: Long): T = {
     if (l >= Int.MinValue && l <= Int.MaxValue) {
       visitInt32(l.toInt)
     } else if (l >= 0 && l <= 0xffffffffL) {
@@ -138,7 +210,7 @@ class MsgPackRPC[T <: java.io.OutputStream](
     out
   }
 
-  override def visitUInt64(ul: Long): T = {
+  def visitUInt64(ul: Long): T = {
     if (ul >= 0) visitInt64(ul)
     else {
       out.write(MPK.UInt64)
@@ -146,8 +218,11 @@ class MsgPackRPC[T <: java.io.OutputStream](
     }
     out
   }
+}
 
-  override def visitString(cs: CharSequence): T = {
+trait StringPack[T <: java.io.OutputStream] extends PackWriters[T] {
+  def visitString(cs: CharSequence): T = {
+    pprint.log("visit string")
     val bytes = cs.toString.getBytes(StandardCharsets.UTF_8)
     val length = bytes.length
     if (length <= 31) {
@@ -166,21 +241,10 @@ class MsgPackRPC[T <: java.io.OutputStream](
     out.write(bytes, 0, length)
     out
   }
-  override def visitBinary(bytes: Array[Byte], offset: Int, len: Int): T = {
-    if (len <= 255) {
-      out.write(MPK.Bin8)
-      writeUInt8(len)
-    } else if (len <= 65535) {
-      out.write(MPK.Bin16)
-      writeUInt16(len)
-    } else {
-      out.write(MPK.Bin32)
-      writeUInt32(len)
-    }
+}
 
-    out.write(bytes, offset, len)
-    out
-  }
+trait PackWriters[T <: java.io.OutputStream] {
+  def out: T
   def writeUInt8(i: Int) = out.write(i)
   def writeUInt16(i: Int) = {
     out.write((i >> 8) & 0xff)
@@ -202,7 +266,9 @@ class MsgPackRPC[T <: java.io.OutputStream](
     out.write(((i >> 8) & 0xff).toInt)
     out.write(((i >> 0) & 0xff).toInt)
   }
+}
 
+trait ExtPack[T <: java.io.OutputStream] extends PackWriters[T] {
   def visitExt(tag: Byte, bytes: Array[Byte], offset: Int, len: Int): T = {
     len match {
       case 1  => out.write(MPK.FixExt1)
@@ -226,14 +292,18 @@ class MsgPackRPC[T <: java.io.OutputStream](
     out.write(bytes, offset, len)
     out
   }
+}
 
+trait CharPack[T <: java.io.OutputStream] extends PackWriters[T] {
   def visitChar(c: Char): T = {
     out.write(MPK.UInt16)
     writeUInt16(c)
     out
   }
+}
 
-  override def visitTimestamp(instant: Instant): T = {
+trait TimestampPack[T <: java.io.OutputStream] extends PackWriters[T] {
+  def visitTimestamp(instant: Instant): T = {
     val seconds: Long = instant.getEpochSecond
     val nanos: Int = instant.getNano
     if (nanos == 0 && (seconds & 0xffffffff00000000L) == 0L) {
