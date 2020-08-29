@@ -31,3 +31,28 @@ object ToMsgPackRPC {
     Msg
   }
 }
+object ToMsgPackRPCA {
+
+  /**
+    * Write the given MessagePack struct as a binary
+    */
+  def bytes: Visitor[ByteArrayOutputStream, Array[Byte]] = {
+    pprint.log("BYTES")
+    outputStream(new ByteArrayOutputStream()).map(_.toByteArray)
+  }
+
+  /**
+    * Write the given MessagePack struct as a binary to the given OutputStream
+    */
+  def outputStream[OutputStream <: java.io.OutputStream](
+      out: OutputStream
+  ): Visitor[OutputStream, OutputStream] = {
+    pprint.log("OUTIE")
+    new MsgPackRPCA(out)
+  }
+
+  def ast: Visitor[Msg, Msg] = {
+    pprint.log("AST")
+    Msg
+  }
+}

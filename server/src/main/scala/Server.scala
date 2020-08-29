@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config._
 import scala.concurrent.duration._
-import collection.JavaConversions._
+// import collection.JavaConversions._
 import nvim.v2._
 import org.slf4j.{LoggerFactory}
 import ch.qos.logback.classic.Level;
@@ -16,7 +16,7 @@ import java.net.Inet4Address
 
 object Server extends App {
   import system.dispatcher
-  implicit val timeout = Timeout(25 seconds)
+  implicit val timeout = Timeout(25.seconds)
   val root:Logger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[ch.qos.logback.classic.Logger]
   root.setLevel(Level.ALL);
 

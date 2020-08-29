@@ -45,6 +45,62 @@ class MsgPackRPC[T <: java.io.OutputStream](
     }
 }
 
+class MsgPackRPCA[T <: java.io.OutputStream](
+    out: T = new ByteArrayOutputStream()
+) extends MsgPackRenderer[T](out) {
+  override def visitObject(length: Int): ObjVisitor[T, T] =
+    new ObjVisitor[T, T] {
+      require(
+        length != -1,
+        "Length of com.rallyhealth.weepack.v1 object must be known up front"
+      )
+      pprint.log("visit obj")
+      if (length <= 15) {
+        out.write(MPK.FixMapMask | length)
+      } else if (length <= 65535) {
+        out.write(MPK.Map16)
+        writeUInt16(length)
+      } else {
+        out.write(MPK.Map32)
+        writeUInt32(length)
+      }
+
+      def subVisitor: Visitor[_, _] = {
+        MsgPackRPCA.this
+      }
+
+      def visitKey(): Visitor[_, _] = {
+        // NoOpVisitor
+        MsgPackRPCA.this
+      }
+      def visitKeyValue(s: Any): Unit = () // do nothing
+      def visitValue(v: T): Unit = () // do nothing
+
+      def visitEnd(): T = out // do nothing
+    }
+  override def visitString(cs: CharSequence): T = {
+    pprint.log("visit string")
+    val bytes = cs.toString.getBytes(StandardCharsets.UTF_8)
+    pprint.log(cs.toString)
+    val length = bytes.length
+    if (length <= 31) {
+      out.write(MPK.FixStrMask | length)
+    } else if (length <= 255) {
+      out.write(MPK.Str8)
+      writeUInt8(length)
+    } else if (length <= 65535) {
+      out.write(MPK.Str16)
+      writeUInt16(length)
+    } else {
+      out.write(MPK.Str32)
+      writeUInt32(length)
+    }
+
+    out.write(bytes, 0, length)
+    out
+  }
+}
+
 class MsgPackRPC2[T <: java.io.OutputStream](
     barr: T = new ByteArrayOutputStream()
 ) extends MsgVisitor[T, T]
