@@ -15,6 +15,7 @@ import com.rallyhealth.weepickle.v1.WeePickle.ToScala
 import com.rallyhealth.weepickle.v1.WeePickle._
 import nvim.v2.msgpack._
 import com.rallyhealth.weepack.v1.Int32
+import com.rallyhealth.weejson.v1.jackson.FromJson
 
 object MsgPackRPCTest extends TestSuite {
 
@@ -46,6 +47,7 @@ object MsgPackRPCTest extends TestSuite {
     }
 
     test("macros") {
+      assert(api.stub("nvim.v2.nvim.buf.Buffer") == "nvim_buf")
       assert(api.stub("nvim.v2.nvim.Nvim") == "nvim")
       assert(api.stub("a.v2.b.c.d.MyClass") == "b_c")
       assert(api.stub("a.v2.b.c.d") == "b_c")
@@ -62,41 +64,52 @@ object MsgPackRPCTest extends TestSuite {
       assert(api.camelToSnake("ABcDEfGhiJkl") == "a_bc_d_ef_ghi_jkl")
     }
     test("macros list") {
-        @nvim.v2.api
-        case class Boo(
-          foo: Arr,
-          foo2: String
-        ) {
-          def test = "example"
-        }
-        val b = Boo(
-          foo = Arr(Str("def"),Str("abc")), 
-          foo2 = "fooboo")
-        assert(b.notice.params == List(Arr(Str("def"),Str("abc")), Str("fooboo")))
-        @nvim.v2.api
-        case class Coo(
-          foo: Obj,
-          foo2: String
-        ) {
-          def test = "example"
-        }
-        val c = Coo(
-          foo = Obj((Str("key"), Int32(1))),
-          foo2 = "fooboo")
-        assert(c.notice.params == List(Obj((Str("key"), Int32(1))), Str("fooboo")))
+      @nvim.v2.api
+      case class Boo(
+        foo: Arr,
+        foo2: String
+      ) {
+        def test = "example"
+      }
+      val b = Boo(foo = Arr(Str("def"), Str("abc")), foo2 = "fooboo")
+      assert(b.notice.params == List(Arr(Str("def"), Str("abc")), Str("fooboo")))
+      @nvim.v2.api
+      case class Coo(
+        foo: Obj,
+        foo2: String
+      ) {
+        def test = "example"
+      }
+      val c = Coo(foo = Obj((Str("key"), Int32(1))), foo2 = "fooboo")
+      assert(c.notice.params == List(Obj((Str("key"), Int32(1))), Str("fooboo")))
     }
 
-    test("macros") {
-      macrolizer.show {
-        @nvim.v2.api
-        case class Boo(
-          foo: String
-        ) {
-          def test = "example"
-        }
-        val f = Boo("abc")
+    test("ui macros") {
 
+      @nvim.v2.ui
+      case class FooBarBaz(
+        foo: String
+      ) {
+        def test = "example"
       }
+      val f = FooBarBaz("abc")
+
+      assert(f.foo == "abc")
+      assert(f.notice.method == "foo_bar_baz")
+      assert(f.notice.params == List(Str("abc")))
+      assert(f.test == "example")
+    }
+
+    test("api macros") {
+      @nvim.v2.api
+      case class LineCount(
+        foo: String
+      ) {
+        def test = "example"
+      }
+      val l = LineCount("abc")
+      assert(l.notice.method == "nvim_msgpack_line_count")
+
       @nvim.v2.api
       case class Foo(
         foo: String
@@ -104,11 +117,11 @@ object MsgPackRPCTest extends TestSuite {
         def test = "example"
       }
       val f = Foo("abc")
+
       assert(f.foo == "abc")
       assert(f.notice.method == "nvim_msgpack_foo")
       assert(f.notice.params == List(Str("abc")))
       assert(f.test == "example")
-
     }
   }
 }

@@ -1,0 +1,101 @@
+#!/usr/local/bin/bash +x
+API=./server/src/main/resources/api.json
+rm -rf ./gen
+mkdir gen
+
+function gen_args() {
+    params=$1
+    plen=$(echo $params | jq 'length')
+    for ((j=0; j<$plen; ++j)); do
+        key=$(echo $params | jq -r '.['$j'][1]'| gsed -r 's/(_)([a-z])/\U\2/g') # it's backwards Integer num
+        val=$(echo $params | jq -r '.['$j'][0]')
+        if [[ $val == "Dictionary" ]]; then
+            val="Msg"
+        elif [[ $val == "ArrayOf(String)" ]]; then
+            val="List[String]"
+        elif [[ $val == "Integer" ]]; then
+            val="Int"
+        elif [[ $val == "Object" ]]; then
+            val="Obj"
+        elif [[ $val == "Array" ]]; then
+            val="Arr"
+        elif [[ $val == "ArrayOf(Integer, 2)" ]]; then
+            val="List[Int]"
+        fi
+        if ((j == $plen - 1)); then
+            printf "$key: $val"
+        else 
+            printf "$key: $val,"
+        fi
+    done
+}
+
+function gen_file() {
+    filename=$1
+    types=$(jq -cM '.types' $API)
+    prefix=$(echo $types | jq -r '.'$filename'.prefix')
+    pkg=$(echo $prefix | gsed -r 's/nvim_([^_]*)_/\1/g')
+cat << EOF > ./gen/$1.scala
+// This file is generated
+package nvim.v2.$pkg
+
+class $filename {
+  val prefix = $prefix
+  val id = "$(echo $types | jq '.'$filename'.id')"
+}
+
+EOF
+}
+
+gen_file "Buffer"
+gen_file "Window"
+gen_file "Tabpage"
+gen_file "UIEvents"
+
+funcs=$(jq -cM '.functions|map(.|select(has("deprecated_since")==false))' $API)
+flen=$(echo $funcs | jq 'length')
+for ((i=0; i<$flen; ++i)); do 
+    blob=$(echo $funcs | jq -r '.['$i']')
+    if [[ $(echo $blob | jq -r '.name') =~ "nvim_(buf|win|tabpage).*" ]]; then 
+        name=$(echo $blob | jq -r '.name|.[5:]' | gsed -r 's/^([a-z]*_)(.*)/\2/g' | gsed -r 's/(^|_)([a-z])/\U\2/g')
+    else 
+        name=$(echo $blob | jq -r '.name|.[5:]' | gsed -r 's/(^|_)([a-z])/\U\2/g')
+    fi
+    prefix=$(echo $blob | jq -r '.name' | gsed -r 's/^(nvim_)?([^_]+).*/\2/g')
+    params=$(gen_args "$(echo $blob | jq -r '.parameters')")
+    echo $(echo $blob |  jq -r '.name') $prefix 
+    if [[ $prefix == "buf" ]]; then
+        fn="Buffer"
+    elif [[ $prefix == "win" ]]; then
+        fn="Window"
+    elif [[ $prefix == "tabpage" ]]; then
+        fn="Tabpage"
+    else
+        fn="Nvim"
+    fi
+    
+cat << EOF >> ./gen/$fn.scala
+@nvim.v2.api
+case class $name($params) extends NvimApi
+
+EOF
+done
+
+ui_events=$(jq -cM '.ui_events|map(.|select(has("deprecated_since")==false))' $API)
+ulen=$(echo $ui_events | jq 'length')
+for ((i=0; i<$ulen; ++i)); do 
+    blob=$(echo $ui_events | jq -r '.['$i']')
+    name=$(echo $blob | jq -r '.name'| gsed -r 's/(^|_)([a-z])/\U\2/g')
+    echo $name
+    params=$(gen_args "$(echo $blob | jq -r '.parameters')")
+    echo $(echo $blob |  jq -r '.name')
+    
+cat << EOF >> ./gen/UIEvents.scala
+@nvim.v2.ui
+case class $name($params) extends NvimApi
+
+EOF
+done
+
+# errts=$(jq -cM '.error_types|map(.|select(has("deprecated_since")==false))' output.json)
+# elen=$(echo $errts | jq 'length')
