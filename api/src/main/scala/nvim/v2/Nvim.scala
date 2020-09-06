@@ -14,18 +14,9 @@ import com.rallyhealth.weepickle.v1.WeePickle.FromScala
 import com.rallyhealth.weejson.v1.jackson.FromJson
 import nvim.v2.msgpack.ToMsgPackRPC
 
-// {
-//   "parameters": [
-//     [
-//       "String",
-//       "command"
-//     ]
-//   ],
-//   "method": false,
-//   "return_type": "void",
-//   "name": "nvim_command",
-//   "since": 1
-// },
+// https://github.com/msgpack-rpc/msgpack-rpc
+// https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md
+
 object Nvim {
 
   def props(
@@ -33,16 +24,6 @@ object Nvim {
     replies: ActorRef
   ) =
     Props(classOf[Nvim], remote, replies)
-}
-
-// https://github.com/msgpack-rpc/msgpack-rpc
-// https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md
-
-case class Command(
-  command: String
-) {
-  def notice = Notification(2, "nvim_command", List(Str(command)))
-  def request(code:Int) = Request(0, code, "nvim_command", List(Str(command)))
 }
 
 case class ConnectionFailed()
@@ -104,6 +85,7 @@ class Nvim(
           val data = FromScala(r).transform(ToMsgPackRPC.bytes)
           self ! ByteString(data)
         case notification: Notification =>
+
           val data = FromScala(notification).transform(ToMsgPackRPC.bytes)
           // val json = FromMsgPack(data.clone).transform(ToJson.string)
           // val scl = List(2,"vim_command", List("vsplit"))

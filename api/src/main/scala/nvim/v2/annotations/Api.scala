@@ -111,7 +111,7 @@ object api {
     symbol: c.universe.Symbol,
     tpname: c.universe.TypeName
   ): String = {
-    stub(symbol.fullName) + "_" + camelToSnake(tpname.toString)
+    "nvim_" + stub(symbol.fullName) + "_" + camelToSnake(tpname.toString)
   }
 
   def impl_api(

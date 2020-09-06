@@ -24,12 +24,9 @@ object Server extends App {
 
   val host = "127.0.0.1"
   val port = 8000
-  system.log.info("fart")
   val logger = LoggerFactory.getLogger(getClass) 
-  logger.info("hello")
   
   val neovim = system.actorOf(Props(new Nvim(new InetSocketAddress(host, port))), name = "neovim")
-
 
   // val nv = Nvim(new Connection(host, port))
   // nv.sendVimCommand("vsplit")

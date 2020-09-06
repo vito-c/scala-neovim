@@ -1,4 +1,4 @@
-package api.v2.nvim.msgpack
+package nvim.v2.msgpack
 
 import utest._
 import com.rallyhealth.weepack.v1.Msg
@@ -108,6 +108,7 @@ object MsgPackRPCTest extends TestSuite {
         def test = "example"
       }
       val l = LineCount("abc")
+      pprint.log(l.notice.method)
       assert(l.notice.method == "nvim_msgpack_line_count")
 
       @nvim.v2.api
@@ -118,6 +119,7 @@ object MsgPackRPCTest extends TestSuite {
       }
       val f = Foo("abc")
 
+      pprint.log(f.notice.method)
       assert(f.foo == "abc")
       assert(f.notice.method == "nvim_msgpack_foo")
       assert(f.notice.params == List(Str("abc")))
